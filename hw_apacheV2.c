@@ -509,37 +509,38 @@ char * GetErrorMessage( DWORD dwLastError )
 
 //----------------------------------------------------------------//
 
-static int harbourV2_handler( request_rec * r )
-{
-	apr_status_t rs;
+static int harbourV2_handler( request_rec * r ) {
+
+   apr_status_t rs;
 
    HB_THREAD_HANDLE hThread;
 
-	if( strcmp( r->handler, "harbour" ) )
-	  return DECLINED;
+   if( strcmp( r->handler, "harbour" ) )
+     return DECLINED;
 
    r->content_type = "text/html"; //revisar
 
-	ap_add_cgi_vars( r );
-	ap_add_common_vars( r );
+   ap_add_cgi_vars( r );
+   ap_add_common_vars( r );
 
    if( ! hb_vmIsActive() ) {  
       hb_vmInit( HB_TRUE );
    };
 
    HB_THREAD_ID th_id;
-	#ifdef _WINDOWS_
-	while(1) {
-        rs = apr_global_mutex_trylock(harbourV2_mutex);
-        if (APR_SUCCESS == rs)
-			break;
-	};
-	#endif	
+#ifdef _WINDOWS_
+   while(1) {
+      rs = apr_global_mutex_trylock(harbourV2_mutex);
+      if (APR_SUCCESS == rs)
+         break;
+   };
+#endif	
    hThread = hb_threadCreate( &th_id, hb_apache, r );   
    hb_threadJoin( hThread );
+#ifdef _WINDOWS_
    rs = apr_global_mutex_unlock(harbourV2_mutex);  
-
-	return OK;
+#endif	
+   return OK;
 }
 
 //----------------------------------------------------------------//
